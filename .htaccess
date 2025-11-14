@@ -1,0 +1,18 @@
+# محافظت از فایل config.php
+<Files "config.php">
+    Order allow,deny
+    Deny from all
+</Files>
+
+# محافظت از فایل‌های لاگ
+<FilesMatch "\.(log|txt)$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# فقط اجازه دسترسی به فایل اصلی
+<Files "telegram_order_notifier.php">
+    Order allow,deny
+    Allow from all
+</Files>
+

@@ -1,0 +1,16 @@
+# فایل‌های حساس
+config.php
+
+# فایل‌های لاگ
+*.log
+*.txt
+orders_log.txt
+notifier.log
+
+# فایل‌های سیستم
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
