@@ -4,144 +4,152 @@
 [![WooCommerce](https://img.shields.io/badge/WooCommerce-3.0%2B-green.svg)](https://woocommerce.com)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-اسکریپت PHP مستقل برای ارسال خودکار اعلان‌های سفارشات جدید ووکامرس به تلگرام. این اسکریپت را می‌توانید در سرور ثالث (سوم) قرار دهید و بدون نیاز به نصب افزونه در وردپرس، از طریق REST API سفارشات جدید را دریافت و به تلگرام ارسال کنید.
+A standalone PHP script that automatically sends new WooCommerce order notifications to Telegram. You can deploy this script on a third-party server and receive order notifications via REST API without installing any WordPress plugin.
 
-## 🌟 ویژگی‌ها
+## 🌟 Features
 
-- ✅ **اجرا در سرور ثالث** - نیازی به نصب در وردپرس نیست
-- ✅ **استفاده از REST API** - اتصال امن به وردپرس
-- ✅ **Cron Job** - قابل اجرای خودکار
-- ✅ **جلوگیری از ارسال تکراری** - سیستم مدیریت هوشمند
-- ✅ **سیستم لاگ کامل** - ردیابی و عیب‌یابی آسان
-- ✅ **پشتیبانی از فارسی** - پیام‌های فارسی و RTL
-- ✅ **امنیت بالا** - محافظت از اطلاعات حساس
+- ✅ **Third-party Server** - No need to install on WordPress
+- ✅ **REST API Integration** - Secure connection to WordPress
+- ✅ **Cron Job Support** - Automated execution
+- ✅ **Duplicate Prevention** - Smart notification management
+- ✅ **Complete Logging System** - Easy tracking and debugging
+- ✅ **Multi-language Ready** - Easy to customize messages
+- ✅ **High Security** - Protected sensitive information
 
-## 📋 نیازمندی‌ها
+## 📋 Requirements
 
-- PHP 7.2 یا بالاتر
-- فعال بودن cURL در PHP
-- دسترسی به اینترنت
-- Application Password در وردپرس
+- PHP 7.2 or higher
+- cURL extension enabled
+- Internet access
+- WordPress Application Password
 
-## نصب و راه‌اندازی
+## 🚀 Installation & Setup
 
-### 1. دریافت Application Password در وردپرس
+### 1. Get Application Password in WordPress
 
-1. به پنل مدیریت وردپرس بروید
-2. به **Users > Profile** بروید
-3. به پایین صفحه بروید و در بخش **Application Passwords**:
-   - یک نام برای رمز عبور انتخاب کنید (مثلاً: Telegram Bot)
-   - روی **Add New Application Password** کلیک کنید
-   - رمز عبور ایجاد شده را کپی کنید (فقط یک بار نمایش داده می‌شود)
+1. Go to your WordPress admin panel
+2. Navigate to **Users > Profile**
+3. Scroll down to **Application Passwords** section:
+   - Enter a name for the password (e.g., Telegram Bot)
+   - Click **Add New Application Password**
+   - Copy the generated password (it's only shown once)
 
-### 2. دریافت توکن ربات تلگرام
+### 2. Get Telegram Bot Token
 
-1. به تلگرام بروید و به [@BotFather](https://t.me/BotFather) پیام دهید
-2. دستور `/newbot` را ارسال کنید
-3. نام ربات و نام کاربری آن را وارد کنید
-4. توکن دریافتی را کپی کنید
+1. Open Telegram and message [@BotFather](https://t.me/BotFather)
+2. Send the `/newbot` command
+3. Enter your bot name and username
+4. Copy the received token
 
-### 3. دریافت شناسه چت (Chat ID)
+### 3. Get Chat ID
 
-1. به [@userinfobot](https://t.me/userinfobot) در تلگرام پیام دهید
-2. شناسه عددی که دریافت می‌کنید را کپی کنید (مثال: `123456789`)
+1. Message [@userinfobot](https://t.me/userinfobot) on Telegram
+2. Copy the numeric ID you receive (e.g., `123456789`)
 
-### 4. تنظیم فایل config.php
+### 4. Configure config.php
 
-فایل `config.php` را باز کنید و اطلاعات زیر را وارد کنید:
+Open `config.example.php`, copy it to `config.php` and fill in the following information:
 
 ```php
-define('WP_SITE_URL', 'https://yoursite.com'); // آدرس سایت وردپرس
-define('WP_API_USER', 'your_api_username');     // نام کاربری وردپرس
+define('WP_SITE_URL', 'https://yoursite.com'); // Your WordPress site URL
+define('WP_API_USER', 'your_api_username');     // WordPress username
 define('WP_API_PASS', 'your_api_password');     // Application Password
-define('TELEGRAM_BOT_TOKEN', 'your_bot_token'); // توکن ربات تلگرام
-define('TELEGRAM_CHAT_ID', 'your_chat_id');     // شناسه چت تلگرام
+define('TELEGRAM_BOT_TOKEN', 'your_bot_token'); // Telegram bot token
+define('TELEGRAM_CHAT_ID', 'your_chat_id');     // Telegram chat ID
 ```
 
-### 5. آپلود فایل‌ها به سرور ثالث
+### 5. Upload Files to Third-party Server
 
-فایل‌های زیر را به سرور ثالث خود آپلود کنید:
+Upload the following files to your third-party server:
 - `telegram_order_notifier.php`
 - `config.php`
 
-**نکته امنیتی:** فایل `config.php` را در پوشه‌ای خارج از public_html قرار دهید یا از `.htaccess` برای محافظت استفاده کنید.
+**Security Note:** Place `config.php` in a directory outside of public_html or use `.htaccess` for protection.
 
-### 6. تنظیم Cron Job
+### 6. Setup Cron Job
 
-برای اجرای خودکار اسکریپت، یک Cron Job تنظیم کنید:
+To run the script automatically, set up a Cron Job:
 
-#### در cPanel:
-1. به بخش **Cron Jobs** بروید
-2. یک Cron Job جدید ایجاد کنید:
-   - **Minute:** `*/5` (هر 5 دقیقه)
+#### In cPanel:
+1. Go to **Cron Jobs** section
+2. Create a new Cron Job:
+   - **Minute:** `*/5` (every 5 minutes)
    - **Hour:** `*`
    - **Day:** `*`
    - **Month:** `*`
    - **Weekday:** `*`
    - **Command:** `/usr/bin/php /path/to/telegram_order_notifier.php`
 
-#### در خط فرمان:
+#### Command Line:
 ```bash
 */5 * * * * /usr/bin/php /path/to/telegram_order_notifier.php
 ```
 
-#### یا می‌توانید از وب هاست خود به صورت دستی اجرا کنید:
+#### Or run manually from your web host:
 ```
 https://your-third-server.com/telegram_order_notifier.php
 ```
 
-## تست
+## 🧪 Testing
 
-برای تست اسکریپت:
+To test the script:
 
-1. فایل `config.php` را با اطلاعات صحیح پر کنید
-2. اسکریپت را به صورت دستی اجرا کنید:
+1. Fill `config.php` with correct information
+2. Run the script manually:
    ```bash
    php telegram_order_notifier.php
    ```
-3. یا از مرورگر به آدرس فایل بروید
-4. یک سفارش تست در ووکامرس ایجاد کنید
-5. اسکریپت را دوباره اجرا کنید
-6. پیام را در تلگرام بررسی کنید
+3. Or visit the file URL in your browser
+4. Create a test order in WooCommerce
+5. Run the script again
+6. Check your Telegram for the message
 
-## فایل‌های لاگ
+## 📝 Log Files
 
-اسکریپت دو فایل لاگ ایجاد می‌کند:
+The script creates two log files:
 
-- `orders_log.txt`: لیست سفارشات ارسال شده (برای جلوگیری از ارسال تکراری)
-- `notifier.log`: لاگ کامل اجرا و خطاها
+- `orders_log.txt`: List of sent orders (prevents duplicate notifications)
+- `notifier.log`: Complete execution and error logs
 
-## عیب‌یابی
+## 🔧 Troubleshooting
 
-### خطا: "تنظیمات ناقص است"
-- بررسی کنید که تمام فیلدهای `config.php` پر شده باشند
+### Error: "Configuration is incomplete"
+- Check that all fields in `config.php` are filled
 
-### خطا: "خطا در اتصال به وردپرس"
-- بررسی کنید که `WP_SITE_URL` صحیح باشد
-- بررسی کنید که Application Password درست باشد
-- بررسی کنید که REST API ووکامرس فعال باشد
+### Error: "Error connecting to WordPress"
+- Verify that `WP_SITE_URL` is correct
+- Verify that Application Password is correct
+- Verify that WooCommerce REST API is enabled
 
-### خطا: "خطا در ارسال به تلگرام"
-- بررسی کنید که توکن ربات صحیح باشد
-- بررسی کنید که شناسه چت صحیح باشد
-- بررسی کنید که ربات تلگرام فعال باشد
+### Error: "Error sending to Telegram"
+- Verify that bot token is correct
+- Verify that chat ID is correct
+- Verify that Telegram bot is active
 
-### سفارشات ارسال نمی‌شوند
-- بررسی کنید که Cron Job به درستی تنظیم شده باشد
-- فایل `notifier.log` را بررسی کنید
-- بررسی کنید که سفارشات در وضعیت `pending`, `processing` یا `on-hold` باشند
+### Orders are not being sent
+- Check that Cron Job is set up correctly
+- Check `notifier.log` file
+- Verify that orders are in `pending`, `processing`, or `on-hold` status
 
-## امنیت
+## 🔒 Security
 
-- فایل `config.php` را در پوشه‌ای امن قرار دهید
-- از `.htaccess` برای محافظت از فایل‌ها استفاده کنید
-- Application Password را به صورت امن نگهداری کنید
-- دسترسی به فایل‌های لاگ را محدود کنید
+- Place `config.php` in a secure directory
+- Use `.htaccess` to protect files
+- Keep Application Password secure
+- Restrict access to log files
 
-## پشتیبانی
+## 📞 Support
 
-در صورت بروز مشکل، فایل `notifier.log` را بررسی کنید تا خطاها را مشاهده کنید.
+If you encounter any issues, check the `notifier.log` file to see error messages.
 
-## مجوز
+## 📄 License
 
-این اسکریپت به صورت رایگان و متن باز ارائه می‌شود.
+This script is provided free and open source.
+
+## 🤝 Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## ⭐ Star History
+
+If you find this project useful, please consider giving it a star ⭐

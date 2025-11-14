@@ -1,20 +1,19 @@
 <?php
 /**
- * فایل تنظیمات نمونه
- * این فایل را کپی کنید و نام آن را به config.php تغییر دهید
- * سپس اطلاعات خود را وارد کنید
+ * Configuration File Example
+ * Copy this file and rename it to config.php
+ * Then fill in your information
  */
 
-// تنظیمات وردپرس
-define('WP_SITE_URL', 'https://yoursite.com'); // آدرس سایت وردپرس شما
-define('WP_API_USER', 'your_api_username');     // نام کاربری API
-define('WP_API_PASS', 'your_api_password');     // رمز عبور API (Application Password)
+// WordPress Settings
+define('WP_SITE_URL', 'https://yoursite.com'); // Your WordPress site URL
+define('WP_API_USER', 'your_api_username');     // WordPress API username
+define('WP_API_PASS', 'your_api_password');     // Application Password
 
-// تنظیمات تلگرام
-define('TELEGRAM_BOT_TOKEN', '123456789:ABCdefGHIjklMNOpqrsTUVwxyz'); // توکن ربات تلگرام
-define('TELEGRAM_CHAT_ID', '123456789'); // شناسه چت شما در تلگرام
+// Telegram Settings
+define('TELEGRAM_BOT_TOKEN', '123456789:ABCdefGHIjklMNOpqrsTUVwxyz'); // Telegram bot token
+define('TELEGRAM_CHAT_ID', '123456789'); // Your Telegram chat ID
 
-// تنظیمات اسکریپت
-define('CHECK_INTERVAL', 60); // فاصله بررسی سفارشات جدید (ثانیه)
-define('LOG_FILE', __DIR__ . '/orders_log.txt'); // فایل لاگ سفارشات ارسال شده
-
+// Script Settings
+define('CHECK_INTERVAL', 60); // Interval for checking new orders (seconds)
+define('LOG_FILE', __DIR__ . '/orders_log.txt'); // Log file for sent orders

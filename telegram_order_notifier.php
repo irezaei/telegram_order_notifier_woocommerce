@@ -1,22 +1,22 @@
 <?php
 /**
- * اسکریپت ارسال اعلان سفارشات ووکامرس به تلگرام
- * این اسکریپت را می‌توانید در سرور ثالث قرار دهید و به صورت cron job اجرا کنید
+ * Telegram WooCommerce Order Notifier Script
+ * This script can be placed on a third-party server and run as a cron job
  * 
- * نحوه استفاده:
- * 1. فایل config.php را با اطلاعات خود پر کنید
- * 2. این فایل را در سرور ثالث آپلود کنید
- * 3. یک cron job تنظیم کنید که هر 1-5 دقیقه این فایل را اجرا کند:
+ * Usage:
+ * 1. Fill config.php with your information
+ * 2. Upload this file to your third-party server
+ * 3. Set up a cron job to run this file every 1-5 minutes:
  *    */5 * * * * /usr/bin/php /path/to/telegram_order_notifier.php
  * 
- * یا می‌توانید از وب هاست خود به صورت دستی اجرا کنید:
+ * Or you can run it manually from your web host:
  * https://your-third-server.com/telegram_order_notifier.php
  */
 
-// بارگذاری تنظیمات
+// Load configuration
 require_once __DIR__ . '/config.php';
 
-// کلاس اصلی
+// Main class
 class WooCommerceTelegramNotifier {
     
     private $wp_site_url;
@@ -34,50 +34,50 @@ class WooCommerceTelegramNotifier {
         $this->telegram_chat_id = TELEGRAM_CHAT_ID;
         $this->log_file = LOG_FILE;
         
-        // بررسی تنظیمات
+        // Validate configuration
         if (empty($this->wp_site_url) || 
             empty($this->wp_api_user) || 
             empty($this->wp_api_pass) || 
             empty($this->telegram_bot_token) || 
             empty($this->telegram_chat_id)) {
-            $this->log_error('تنظیمات ناقص است. لطفاً فایل config.php را بررسی کنید.');
-            die('Error: تنظیمات ناقص است. لطفاً فایل config.php را بررسی کنید.');
+            $this->log_error('Configuration is incomplete. Please check config.php file.');
+            die('Error: Configuration is incomplete. Please check config.php file.');
         }
     }
     
     /**
-     * اجرای اصلی اسکریپت
+     * Main script execution
      */
     public function run() {
-        // دریافت آخرین سفارشات
+        // Get new orders
         $orders = $this->get_new_orders();
         
         if (empty($orders)) {
-            $this->log('هیچ سفارش جدیدی یافت نشد.');
+            $this->log('No new orders found.');
             return;
         }
         
-        // ارسال اعلان برای هر سفارش جدید
+        // Send notification for each new order
         foreach ($orders as $order) {
             if ($this->is_order_sent($order['id'])) {
-                continue; // قبلاً ارسال شده
+                continue; // Already sent
             }
             
             $message = $this->format_order_message($order);
             if ($this->send_telegram_message($message)) {
                 $this->mark_order_as_sent($order['id']);
-                $this->log("سفارش #{$order['id']} با موفقیت ارسال شد.");
+                $this->log("Order #{$order['id']} sent successfully.");
             } else {
-                $this->log_error("خطا در ارسال سفارش #{$order['id']}");
+                $this->log_error("Error sending order #{$order['id']}");
             }
             
-            // تاخیر کوتاه برای جلوگیری از rate limit
+            // Short delay to prevent rate limiting
             sleep(1);
         }
     }
     
     /**
-     * دریافت سفارشات جدید از REST API وردپرس
+     * Get new orders from WordPress REST API
      */
     private function get_new_orders() {
         $url = rtrim($this->wp_site_url, '/') . '/wp-json/wc/v3/orders';
@@ -97,19 +97,19 @@ class WooCommerceTelegramNotifier {
         curl_close($ch);
         
         if ($error) {
-            $this->log_error("خطا در اتصال به وردپرس: " . $error);
+            $this->log_error("Error connecting to WordPress: " . $error);
             return array();
         }
         
         if ($http_code !== 200) {
-            $this->log_error("خطا در دریافت سفارشات. کد HTTP: " . $http_code);
+            $this->log_error("Error fetching orders. HTTP Code: " . $http_code);
             return array();
         }
         
         $orders = json_decode($response, true);
         
         if (json_last_error() !== JSON_ERROR_NONE) {
-            $this->log_error("خطا در پردازش JSON: " . json_last_error_msg());
+            $this->log_error("JSON parsing error: " . json_last_error_msg());
             return array();
         }
         
@@ -117,7 +117,7 @@ class WooCommerceTelegramNotifier {
     }
     
     /**
-     * فرمت پیام سفارش
+     * Format order message
      */
     private function format_order_message($order) {
         $order_id = isset($order['id']) ? $order['id'] : 'N/A';
@@ -134,16 +134,16 @@ class WooCommerceTelegramNotifier {
         $payment_method = isset($order['payment_method_title']) ? $order['payment_method_title'] : 'N/A';
         $order_status = isset($order['status']) ? $this->translate_status($order['status']) : 'N/A';
         
-        // لیست محصولات
+        // Product list
         $items = isset($order['line_items']) ? $order['line_items'] : array();
         $items_list = '';
         foreach ($items as $item) {
-            $item_name = isset($item['name']) ? $item['name'] : 'محصول';
+            $item_name = isset($item['name']) ? $item['name'] : 'Product';
             $item_qty = isset($item['quantity']) ? $item['quantity'] : 1;
-            $items_list .= "• " . $item_name . " (تعداد: " . $item_qty . ")\n";
+            $items_list .= "• " . $item_name . " (Qty: " . $item_qty . ")\n";
         }
         
-        // آدرس
+        // Shipping address
         $shipping = isset($order['shipping']) ? $order['shipping'] : array();
         $shipping_address = '';
         if (!empty($shipping)) {
@@ -157,46 +157,46 @@ class WooCommerceTelegramNotifier {
             $shipping_address = implode(', ', $address_parts);
         }
         
-        $message = "🛒 *سفارش جدید*\n\n";
-        $message .= "📋 *شماره سفارش:* #" . $order_id . "\n";
-        $message .= "👤 *مشتری:* " . ($billing_name ?: 'N/A') . "\n";
-        $message .= "📧 *ایمیل:* " . $billing_email . "\n";
-        $message .= "📱 *تلفن:* " . $billing_phone . "\n";
-        $message .= "📅 *تاریخ:* " . $order_date . "\n";
-        $message .= "💳 *روش پرداخت:* " . $payment_method . "\n";
-        $message .= "📊 *وضعیت:* " . $order_status . "\n";
-        $message .= "💰 *مبلغ کل:* " . number_format((float)$order_total, 0) . " " . $order_currency . "\n\n";
+        $message = "🛒 *New Order*\n\n";
+        $message .= "📋 *Order ID:* #" . $order_id . "\n";
+        $message .= "👤 *Customer:* " . ($billing_name ?: 'N/A') . "\n";
+        $message .= "📧 *Email:* " . $billing_email . "\n";
+        $message .= "📱 *Phone:* " . $billing_phone . "\n";
+        $message .= "📅 *Date:* " . $order_date . "\n";
+        $message .= "💳 *Payment Method:* " . $payment_method . "\n";
+        $message .= "📊 *Status:* " . $order_status . "\n";
+        $message .= "💰 *Total:* " . number_format((float)$order_total, 2) . " " . $order_currency . "\n\n";
         
         if (!empty($items_list)) {
-            $message .= "*محصولات:*\n" . $items_list;
+            $message .= "*Products:*\n" . $items_list;
         }
         
         if (!empty($shipping_address)) {
-            $message .= "\n*آدرس ارسال:*\n" . $shipping_address;
+            $message .= "\n*Shipping Address:*\n" . $shipping_address;
         }
         
         return $message;
     }
     
     /**
-     * ترجمه وضعیت سفارش
+     * Translate order status
      */
     private function translate_status($status) {
         $statuses = array(
-            'pending' => 'در انتظار پرداخت',
-            'processing' => 'در حال پردازش',
-            'on-hold' => 'در انتظار',
-            'completed' => 'تکمیل شده',
-            'cancelled' => 'لغو شده',
-            'refunded' => 'بازگشت وجه',
-            'failed' => 'ناموفق'
+            'pending' => 'Pending Payment',
+            'processing' => 'Processing',
+            'on-hold' => 'On Hold',
+            'completed' => 'Completed',
+            'cancelled' => 'Cancelled',
+            'refunded' => 'Refunded',
+            'failed' => 'Failed'
         );
         
         return isset($statuses[$status]) ? $statuses[$status] : $status;
     }
     
     /**
-     * ارسال پیام به تلگرام
+     * Send message to Telegram
      */
     private function send_telegram_message($message) {
         $url = "https://api.telegram.org/bot{$this->telegram_bot_token}/sendMessage";
@@ -222,12 +222,12 @@ class WooCommerceTelegramNotifier {
         curl_close($ch);
         
         if ($error) {
-            $this->log_error("خطا در ارسال به تلگرام: " . $error);
+            $this->log_error("Error sending to Telegram: " . $error);
             return false;
         }
         
         if ($http_code !== 200) {
-            $this->log_error("خطا در ارسال به تلگرام. کد HTTP: " . $http_code);
+            $this->log_error("Error sending to Telegram. HTTP Code: " . $http_code);
             return false;
         }
         
@@ -236,14 +236,14 @@ class WooCommerceTelegramNotifier {
         if (isset($result['ok']) && $result['ok'] === true) {
             return true;
         } else {
-            $error_msg = isset($result['description']) ? $result['description'] : 'خطای ناشناخته';
-            $this->log_error("خطا از API تلگرام: " . $error_msg);
+            $error_msg = isset($result['description']) ? $result['description'] : 'Unknown error';
+            $this->log_error("Telegram API error: " . $error_msg);
             return false;
         }
     }
     
     /**
-     * بررسی اینکه آیا سفارش قبلاً ارسال شده یا نه
+     * Check if order has already been sent
      */
     private function is_order_sent($order_id) {
         if (!file_exists($this->log_file)) {
@@ -255,14 +255,14 @@ class WooCommerceTelegramNotifier {
     }
     
     /**
-     * علامت‌گذاری سفارش به عنوان ارسال شده
+     * Mark order as sent
      */
     private function mark_order_as_sent($order_id) {
         file_put_contents($this->log_file, $order_id . "\n", FILE_APPEND | LOCK_EX);
     }
     
     /**
-     * ثبت لاگ
+     * Log message
      */
     private function log($message) {
         $timestamp = date('Y-m-d H:i:s');
@@ -271,7 +271,7 @@ class WooCommerceTelegramNotifier {
     }
     
     /**
-     * ثبت خطا
+     * Log error
      */
     private function log_error($message) {
         $timestamp = date('Y-m-d H:i:s');
@@ -280,13 +280,12 @@ class WooCommerceTelegramNotifier {
     }
 }
 
-// اجرای اسکریپت
+// Execute script
 try {
     $notifier = new WooCommerceTelegramNotifier();
     $notifier->run();
-    echo "اسکریپت با موفقیت اجرا شد.\n";
+    echo "Script executed successfully.\n";
 } catch (Exception $e) {
-    echo "خطا: " . $e->getMessage() . "\n";
+    echo "Error: " . $e->getMessage() . "\n";
     error_log("Fatal error: " . $e->getMessage());
 }
-
